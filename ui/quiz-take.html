@@ -303,26 +303,30 @@
     </div>
 
     <header class="focus-topbar">
-        <button class="btn-ghost" onclick="window.location.href='/student-hub.html'">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            Save & Exit
-        </button>
+        <div style="flex: 1; display: flex; justify-content: flex-start;">
+            <button class="btn-ghost" onclick="window.location.href='/student-hub.html'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Save & Exit
+            </button>
+        </div>
 
-        <div class="status-tracker">
+        <div class="status-tracker" style="flex: 1; display: flex; flex-direction: column; align-items: center;">
             <div class="status-label">Question</div>
             <div class="status-numbers"><span id="curr-q-idx">00</span> <span
                     style="color: var(--ink-light); font-weight: 400;">/ <span id="total-q-count">00</span></span></div>
         </div>
 
-        <div class="timer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            --:--
+        <div style="flex: 1; display: flex; justify-content: flex-end;">
+            <div class="timer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                --:--
+            </div>
         </div>
     </header>
 
@@ -332,7 +336,28 @@
             <h2>Loading Question...</h2>
         </article>
 
-        <footer class="focus-footer">
+        <div id="success-container"
+            style="display: none; text-align: center; max-width: 600px; margin: 0 auto; padding: 4rem 2rem;">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--forest-pine)" stroke-width="2"
+                style="margin-bottom: 1.5rem;">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <h2 style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--ink-black); letter-spacing: -1px;">
+                Assignment Complete!</h2>
+            <p id="success-score"
+                style="font-family: var(--font-data); font-size: 1.1rem; margin-bottom: 3rem; color: var(--ink-light);">
+            </p>
+            <button class="btn-nav btn-next" onclick="window.location.href='/student-hub.html'" style="margin: 0 auto;">
+                Return to Dashboard
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+        </div>
+
+        <footer class="focus-footer" id="focus-footer">
             <button class="btn-nav btn-prev" id="btn-prev-question" style="visibility: hidden;">
                 Previous
             </button>
@@ -457,8 +482,19 @@
                             studentName: "Luke Crain",
                             answers: formattedAnswers
                         });
-                        alert(`Quiz Submitted! You scored ${result.score} out of ${result.total}.`);
-                        window.location.href = '/student-hub.html';
+
+                        // Hide question UI
+                        document.getElementById('question-container').style.display = 'none';
+                        document.getElementById('focus-footer').style.display = 'none';
+                        document.querySelector('.focus-topbar').style.visibility = 'hidden';
+
+                        // Show Success Page
+                        document.getElementById('success-container').style.display = 'block';
+                        document.getElementById('success-score').textContent = `You scored ${result.score} out of ${result.total} available points.`;
+
+                        // Set progress bar fully filled
+                        document.getElementById('progress-bar').style.width = '100%';
+
                     } catch (e) {
                         alert("Error submitting attempt.");
                         console.error(e);
