@@ -1,6 +1,8 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <chrono>
+#include <algorithm>
 #include "../include/httplib.h"
 #include "../include/json.hpp"
 #include "../include/models/Quiz.h"
@@ -16,32 +18,55 @@ using json = nlohmann::json;
 
 // In-memory state for now
 std::map<std::string, std::unique_ptr<Quiz>> quizzes;
-std::map<std::string, std::unique_ptr<QuizAttempt>> attempts;
+
+struct SavedAttempt {
+    std::string attemptId;
+    std::string studentId;
+    std::string studentName;
+    std::string quizId;
+    std::string quizTitle;
+    int score;
+    int total;
+    long long timestamp; 
+};
+std::vector<SavedAttempt> globalAttempts;
+
+long long getCurrentTimeMs() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()
+    ).count();
+}
 
 void setupInitialData() {
     // Create a dummy teacher
     Teacher t("U001", "Professor Smith");
     
     // Create a dummy quiz
-    auto q1 = std::make_unique<Quiz>("Q001", "C++ Fundamentals", t.getUserId());
+    auto q1 = std::make_unique<Quiz>("Q001", "Advanced Physics: Kinematics", t.getUserId());
     
     auto mcq = std::make_unique<MCQQuestion>(
-        "q_001_1", "What does OOP stand for?", 5, 
-        std::vector<std::string>{"Object Oriented Programming", "Only Output Prints", "Out Of Place", "Overload Object Parameters"}, 
-        "Object Oriented Programming");
-        
-    auto tf = std::make_unique<TrueFalseQuestion>(
-        "q_001_2", "C++ supports multiple inheritance.", 2, true);
+        "q_001_1", "A car accelerates uniformly from rest to a speed of 25 m/s in 8.0 seconds. What is the acceleration?", 10, 
+        std::vector<std::string>{"2.5 m/s²", "3.1 m/s²", "4.0 m/s²", "200 m/s²"}, 
+        "3.1 m/s²");
         
     auto sa = std::make_unique<ShortAnswerQuestion>(
-        "q_001_3", "What memory management keyword deletes an object?", 3, "delete");
+        "q_001_2", "Define Newton's First Law of Motion and provide a real-world example.", 15, "inertia");
 
     q1->addQuestion(std::move(mcq));
-    q1->addQuestion(std::move(tf));
     q1->addQuestion(std::move(sa));
 
     FileManager::saveQuiz(*q1, "data/Q001.json");
     quizzes["Q001"] = std::move(q1);
+
+    // Add some dummy attempts to populate the dashboards
+    long long now = getCurrentTimeMs();
+    long long dayMs = 24LL * 60 * 60 * 1000;
+
+    globalAttempts.push_back({"A001", "student_dummy", "L. Crain", "Q002", "Thermodynamics Quiz", 92, 100, now - 3*dayMs});
+    globalAttempts.push_back({"A002", "S002", "Eleanor Vance", "Q003", "Module 4: Thermodynamics", 92, 100, now - 1*dayMs});
+    globalAttempts.push_back({"A003", "student_dummy", "Luke Crain", "Q003", "Module 4: Thermodynamics", 71, 100, now - 2*dayMs});
+    globalAttempts.push_back({"A004", "S003", "Theo Crain", "Q004", "Midterm Preparation", 88, 100, now - 4*dayMs});
+    globalAttempts.push_back({"A005", "S004", "Shirley Jackson", "Q001", "Advanced Physics: Kinematics", 25, 25, now - 6*dayMs});
 }
 
 int main() {
@@ -85,9 +110,13 @@ int main() {
         std::string quizId = req.matches[1];
         if (quizzes.find(quizId) != quizzes.end()) {
             json response = FileManager::quizToJson(*quizzes[quizId]);
-            // For security, a real system might strip correct answers when sending to student.
-            // For this project, we might just send the whole thing, or filter it.
-            // Let's send the whole thing so the frontend can check, or let the backend check.
+            
+            if (req.has_param("take") && req.get_param_value("take") == "true") {
+                for (auto& q : response["questions"]) {
+                    q.erase("correctAnswer");
+                }
+            }
+
             res.set_content(response.dump(), "application/json");
         } else {
             res.status = 404;
@@ -103,22 +132,15 @@ int main() {
             try {
                 json body = json::parse(req.body);
                 std::string studentName = body.value("studentName", "Anonymous");
-                auto student = std::make_shared<Student>("S_" + std::to_string(rand()), studentName);
-                
-                // Create attempt
-                // Note: We need a shared_ptr for Quiz as well for the attempt,
-                // But our map holds unique_ptr. To fix this quickly without changing models,
-                // we'll just pull the data and calculate it directly here, or change the map.
-                // For simplicity, let's just calculate the score right here.
+                std::string studentId = body.value("studentId", "student_dummy");
                 
                 int score = 0;
                 json results = json::object();
                 
-                for (const auto& ans : body["answers"]) {
-                    std::string qId = ans["questionId"];
-                    std::string sAns = ans["answer"]; // assuming everything comes in as literal string
+                for (auto ans : body["answers"]) {
+                    std::string qId = ans.value("questionId", "");
+                    std::string sAns = ans.value("answer", ""); 
                     
-                    // find question
                     for(const auto& q : quizzes[quizId]->getQuestions()) {
                         if(q->getQuestionId() == qId) {
                             bool isCorrect = q->checkAnswer(sAns);
@@ -129,9 +151,21 @@ int main() {
                     }
                 }
 
+                int totalMarks = quizzes[quizId]->getTotalMarks();
+                globalAttempts.push_back({
+                    "A_" + std::to_string(getCurrentTimeMs()),
+                    studentId,
+                    studentName,
+                    quizId,
+                    quizzes[quizId]->getTitle(),
+                    score,
+                    totalMarks,
+                    getCurrentTimeMs()
+                });
+
                 json response;
                 response["score"] = score;
-                response["total"] = quizzes[quizId]->getTotalMarks();
+                response["total"] = totalMarks;
                 response["details"] = results;
 
                 res.set_content(response.dump(), "application/json");
@@ -163,6 +197,97 @@ int main() {
         } catch(...) {
             res.status = 400;
         }
+    });
+
+    // API: Teacher Dashboard Metrics
+    svr.Get("/api/teacher/dashboard", [&](const httplib::Request& req, httplib::Response& res) {
+        set_cors(res);
+        json response;
+        response["activeAssignments"] = quizzes.size();
+        
+        double totalScorePct = 0;
+        int count = 0;
+        json recent = json::array();
+
+        auto sortedAttempts = globalAttempts;
+        std::sort(sortedAttempts.begin(), sortedAttempts.end(), [](const SavedAttempt& a, const SavedAttempt& b) {
+            return a.timestamp > b.timestamp;
+        });
+
+        for (const auto& a : sortedAttempts) {
+            if (a.total > 0) {
+                double pct = (double)a.score / a.total * 100.0;
+                totalScorePct += pct;
+                count++;
+            }
+            if (recent.size() < 4) {
+                json r;
+                r["studentName"] = a.studentName;
+                r["quizTitle"] = a.quizTitle;
+                r["score"] = (a.total > 0) ? ((double)a.score / a.total * 100.0) : 0;
+                recent.push_back(r);
+            }
+        }
+
+        response["avgClassScore"] = count > 0 ? (totalScorePct / count) : 0;
+        response["needsGrading"] = 12; // Static for demo
+        response["recentSubmissions"] = recent;
+
+        std::vector<int> velocity(7, 0);
+        long long now = getCurrentTimeMs();
+        long long dayMs = 24LL * 60 * 60 * 1000;
+        
+        for (const auto& a : globalAttempts) {
+            long long diff = now - a.timestamp;
+            int daysAgo = diff / dayMs;
+            if (daysAgo >= 0 && daysAgo < 7) {
+                velocity[6 - daysAgo]++;
+            }
+        }
+        
+        json vArr = json::array();
+        for (int v : velocity) vArr.push_back(v);
+        response["velocityHistory"] = vArr;
+
+        res.set_content(response.dump(), "application/json");
+    });
+
+    // API: Student Dashboard Metrics
+    svr.Get(R"(/api/student/dashboard/([a-zA-Z0-9_-]+))", [&](const httplib::Request& req, httplib::Response& res) {
+        set_cors(res);
+        std::string studentId = req.matches[1];
+        
+        json response;
+        
+        json completed = json::array();
+        std::vector<std::string> completedQuizIds;
+        for (const auto& a : globalAttempts) {
+            if (a.studentId == studentId) {
+                json c;
+                c["quizId"] = a.quizId;
+                c["quizTitle"] = a.quizTitle;
+                c["score"] = a.score;
+                c["total"] = a.total;
+                completed.push_back(c);
+                completedQuizIds.push_back(a.quizId);
+            }
+        }
+
+        json active = json::array();
+        for (const auto& pair : quizzes) {
+            if (std::find(completedQuizIds.begin(), completedQuizIds.end(), pair.first) == completedQuizIds.end()) {
+                json act;
+                act["id"] = pair.first;
+                act["title"] = pair.second->getTitle();
+                act["totalMarks"] = pair.second->getTotalMarks();
+                active.push_back(act);
+            }
+        }
+
+        response["completedAssignments"] = completed;
+        response["activeAssignments"] = active;
+
+        res.set_content(response.dump(), "application/json");
     });
 
     std::cout << "Starting Quiz API Server on http://localhost:8080" << std::endl;

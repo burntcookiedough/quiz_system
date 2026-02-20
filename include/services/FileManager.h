@@ -34,17 +34,21 @@ public:
     }
 
     static std::unique_ptr<Question> jsonToQuestion(const json& j) {
-        std::string type = j["type"];
-        std::string id = j["id"];
-        std::string text = j["text"];
-        int marks = j["marks"];
+        std::string type = j.value("type", "");
+        std::string id = j.value("id", "");
+        std::string text = j.value("text", "");
+        int marks = j.value("marks", 0);
 
         if (type == "MCQ") {
-            return std::make_unique<MCQQuestion>(id, text, marks, j["options"].get<std::vector<std::string>>(), j["correctOption"]);
+            auto options = j.contains("options") ? j["options"].get<std::vector<std::string>>() : std::vector<std::string>{};
+            std::string correct = j.value("correctAnswer", j.value("correctOption", ""));
+            return std::make_unique<MCQQuestion>(id, text, marks, options, correct);
         } else if (type == "TrueFalse") {
-            return std::make_unique<TrueFalseQuestion>(id, text, marks, j["correctAnswer"].get<bool>());
+            bool correct = j.value("correctAnswer", false);
+            return std::make_unique<TrueFalseQuestion>(id, text, marks, correct);
         } else if (type == "ShortAnswer") {
-            return std::make_unique<ShortAnswerQuestion>(id, text, marks, j["correctAnswer"]);
+            std::string correct = j.value("correctAnswer", "");
+            return std::make_unique<ShortAnswerQuestion>(id, text, marks, correct);
         }
         return nullptr;
     }
@@ -64,11 +68,18 @@ public:
     }
 
     static std::unique_ptr<Quiz> jsonToQuiz(const json& j) {
-        auto quiz = std::make_unique<Quiz>(j["quizId"], j["title"], j["authorId"]);
-        for (const auto& qJson : j["questions"]) {
-            auto q = jsonToQuestion(qJson);
-            if (q) {
-                quiz->addQuestion(std::move(q));
+        std::string quizId = j.value("quizId", j.value("id", ""));
+        std::string title = j.value("title", "Untitled");
+        std::string authorId = j.value("authorId", "Unknown");
+
+        auto quiz = std::make_unique<Quiz>(quizId, title, authorId);
+        
+        if (j.contains("questions") && j["questions"].is_array()) {
+            for (const auto& qJson : j["questions"]) {
+                auto q = jsonToQuestion(qJson);
+                if (q) {
+                    quiz->addQuestion(std::move(q));
+                }
             }
         }
         return quiz;

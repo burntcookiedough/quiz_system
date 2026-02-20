@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structured Canvas - Quiz Builder</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon"></div>
+            Struct
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-label">Workspace</div>
+            <a href="/teacher-dashboard.html" class="nav-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+                Dashboard
+            </a>
+            <a href="/quiz-builder.html" class="nav-item active">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Quiz Builder
+            </a>
+            <a href="/teacher-dashboard.html" class="nav-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Roster
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-canvas">
+
+        <header class="topbar">
+            <div class="breadcrumb">
+                WORKSPACE / <span>QUIZ BUILDER</span>
+            </div>
+            <button class="btn-action" id="btn-publish">Publish Module</button>
+        </header>
+
+        <div class="editor-container" id="editor-container">
+
+            <div class="doc-header">
+                <input type="text" class="input-title" id="quiz-title" placeholder="Untitled Assignment..."
+                    value="Advanced Physics: Kinematics">
+                <textarea class="input-desc" id="quiz-desc" rows="2"
+                    placeholder="Add instructions or an optional description...">Please complete all problems. Show your work on paper where applicable.</textarea>
+            </div>
+
+            <!-- Block container -->
+            <div id="blocks-wrapper">
+                <div class="block builder-block" data-type="mcq">
+                    <div class="block-header">
+                        <span class="block-type">Multiple Choice</span>
+                        <div class="block-settings">
+                            Pts: <input type="number" class="input-points" value="10">
+                        </div>
+                    </div>
+
+                    <textarea class="input-question" rows="2"
+                        placeholder="Write your question here...">A car accelerates uniformly from rest to a speed of 25 m/s in 8.0 seconds. What is the acceleration?</textarea>
+
+                    <ul class="options-list">
+                        <li class="option-item">
+                            <input type="radio" name="mock_q1" value="A">
+                            <input type="text" class="input-option opt-text" value="2.5 m/s²">
+                        </li>
+                        <li class="option-item correct">
+                            <input type="radio" name="mock_q1" value="B" checked>
+                            <input type="text" class="input-option opt-text" value="3.1 m/s²">
+                        </li>
+                    </ul>
+                    <button class="btn-add-option" onclick="addOption(this)">+ Add Option</button>
+                </div>
+
+                <div class="block builder-block" data-type="short">
+                    <div class="block-header">
+                        <span class="block-type" style="background: var(--terra-cotta);">Short Answer</span>
+                        <div class="block-settings">
+                            Pts: <input type="number" class="input-points" value="15">
+                        </div>
+                    </div>
+
+                    <textarea class="input-question" rows="2"
+                        placeholder="Write your question here...">Define Newton's First Law of Motion and provide a real-world example.</textarea>
+
+                    <input type="text" class="input-option correct-ans"
+                        style="width:100%; margin-top:1rem; border:1px solid var(--ink-black); padding: 0.5rem;"
+                        placeholder="Exact Correct Answer Keyword (for auto-grading)">
+                </div>
+            </div>
+
+            <button class="add-block-btn" id="btn-add-block">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Content Block
+            </button>
+
+        </div>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/components.js"></script>
+    <script>
+        let qCount = 1;
+
+        function addOption(btnObj) {
+            const list = btnObj.previousElementSibling;
+            const li = document.createElement('li');
+            li.className = 'option-item';
+            const rndNode = "mock_q" + qCount;
+            // Best effort radio group name linking
+
+            li.innerHTML = `
+                <input type="radio" name="\${rndNode}" value="New">
+                <input type="text" class="input-option opt-text" placeholder="New Option">
+            `;
+            list.appendChild(li);
+        }
+
+        document.getElementById('btn-add-block').addEventListener('click', () => {
+            qCount++;
+            const wrapper = document.getElementById('blocks-wrapper');
+
+            const html = `
+                <div class="block builder-block" data-type="mcq">
+                    <div class="block-header">
+                        <span class="block-type">Multiple Choice</span>
+                        <div class="block-settings">
+                            Pts: <input type="number" class="input-points" value="10">
+                        </div>
+                    </div>
+
+                    <textarea class="input-question" rows="2"
+                        placeholder="Write your question here..."></textarea>
+
+                    <ul class="options-list">
+                        <li class="option-item correct">
+                            <input type="radio" name="mock_new_${qCount}" value="A" checked>
+                            <input type="text" class="input-option opt-text" placeholder="Option 1">
+                        </li>
+                        <li class="option-item">
+                            <input type="radio" name="mock_new_${qCount}" value="B">
+                            <input type="text" class="input-option opt-text" placeholder="Option 2">
+                        </li>
+                    </ul>
+                    <button class="btn-add-option" onclick="addOption(this)">+ Add Option</button>
+                    <!-- Small delete button -->
+                    <button style="position:absolute; top: 1rem; right: 1rem; background:transparent; border:none; color:var(--terra-cotta); cursor:pointer;" onclick="this.parentElement.remove()">Remove Block</button>
+                </div>
+            `;
+            wrapper.insertAdjacentHTML('beforeend', html);
+        });
+
+        document.getElementById('btn-publish').addEventListener('click', async () => {
+            const title = document.getElementById('quiz-title').value;
+            const desc = document.getElementById('quiz-desc').value;
+
+            const blocks = document.querySelectorAll('.builder-block');
+            const questions = [];
+
+            blocks.forEach((block, idx) => {
+                const type = block.getAttribute('data-type');
+                const text = block.querySelector('.input-question').value;
+                const marks = parseInt(block.querySelector('.input-points').value) || 1;
+
+                const qId = "q_" + Date.now() + "_" + idx;
+
+                if (type === 'mcq') {
+                    const opts = [];
+                    let correctOpt = "";
+                    block.querySelectorAll('.option-item').forEach(optEl => {
+                        const optText = optEl.querySelector('.opt-text').value;
+                        opts.push(optText);
+                        if (optEl.querySelector('input[type="radio"]').checked) {
+                            correctOpt = optText;
+                        }
+                    });
+
+                    questions.push({
+                        type: "MCQ",
+                        id: qId,
+                        text: text,
+                        marks: marks,
+                        options: opts,
+                        correctAnswer: correctOpt
+                    });
+                } else if (type === 'short') {
+                    const correctAns = block.querySelector('.correct-ans').value;
+                    questions.push({
+                        type: "ShortAnswer",
+                        id: qId,
+                        text: text,
+                        marks: marks,
+                        correctAnswer: correctAns
+                    });
+                }
+            });
+
+            const payload = {
+                id: "Q_" + Date.now(),
+                title: title,
+                authorId: "U001",
+                questions: questions
+            };
+
+            try {
+                await window.StructAPI.createQuiz(payload);
+                alert('Quiz Published Successfully!');
+                window.location.href = '/teacher-dashboard.html';
+            } catch (e) {
+                alert('Error publishing quiz');
+                console.error(e);
+            }
+        });
+    </script>
+</body>
+
+</html>

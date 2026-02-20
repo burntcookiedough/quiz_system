@@ -2,33 +2,26 @@
     "authorId": "U001",
     "questions": [
         {
-            "correctOption": "Object Oriented Programming",
+            "correctOption": "3.1 m/s²",
             "id": "q_001_1",
-            "marks": 5,
+            "marks": 10,
             "options": [
-                "Object Oriented Programming",
-                "Only Output Prints",
-                "Out Of Place",
-                "Overload Object Parameters"
+                "2.5 m/s²",
+                "3.1 m/s²",
+                "4.0 m/s²",
+                "200 m/s²"
             ],
-            "text": "What does OOP stand for?",
+            "text": "A car accelerates uniformly from rest to a speed of 25 m/s in 8.0 seconds. What is the acceleration?",
             "type": "MCQ"
         },
         {
-            "correctAnswer": true,
+            "correctAnswer": "inertia",
             "id": "q_001_2",
-            "marks": 2,
-            "text": "C++ supports multiple inheritance.",
-            "type": "TrueFalse"
-        },
-        {
-            "correctAnswer": "delete",
-            "id": "q_001_3",
-            "marks": 3,
-            "text": "What memory management keyword deletes an object?",
+            "marks": 15,
+            "text": "Define Newton's First Law of Motion and provide a real-world example.",
             "type": "ShortAnswer"
         }
     ],
     "quizId": "Q001",
-    "title": "C++ Fundamentals"
+    "title": "Advanced Physics: Kinematics"
 }

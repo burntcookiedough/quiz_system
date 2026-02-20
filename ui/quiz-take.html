@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structured Canvas - Focus Mode</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Specific focus mode overrides not in base style.css */
+        body {
+            background-image:
+                linear-gradient(var(--taupe-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--taupe-border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center top;
+        }
+
+        .global-progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: var(--taupe-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .global-progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--ink-black);
+            transition: width 0.3s ease;
+        }
+
+        .focus-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 3rem;
+            margin-top: 6px;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: none;
+            font-family: var(--font-data);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--ink-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition-snappy);
+        }
+
+        .btn-ghost:hover {
+            color: var(--terra-cotta);
+        }
+
+        .status-tracker {
+            text-align: center;
+        }
+
+        .status-label {
+            font-family: var(--font-data);
+            font-size: 0.75rem;
+            color: var(--ink-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.25rem;
+        }
+
+        .status-numbers {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .timer {
+            font-family: var(--font-data);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--ink-black);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--ink-black);
+            background: var(--surface-white);
+            box-shadow: var(--hard-shadow-sm);
+        }
+
+        .focus-canvas {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .question-container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .question-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tag {
+            font-family: var(--font-data);
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: var(--ink-black);
+            color: var(--surface-white);
+            padding: 0.25rem 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .tag-outline {
+            background: transparent;
+            color: var(--ink-black);
+            border: 1px solid var(--ink-black);
+        }
+
+        .question-text {
+            font-size: 2.25rem;
+            font-weight: 500;
+            line-height: 1.3;
+            letter-spacing: -0.5px;
+            margin-bottom: 3rem;
+            color: var(--ink-black);
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: var(--surface-white);
+            border: 2px solid var(--ink-black);
+            cursor: pointer;
+            transition: var(--transition-snappy);
+            position: relative;
+        }
+
+        .option-label input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .custom-radio {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--ink-black);
+            margin-right: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-snappy);
+        }
+
+        .custom-radio::after {
+            content: "";
+            width: 12px;
+            height: 12px;
+            background: var(--ink-black);
+            display: none;
+        }
+
+        .option-text {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+
+        .option-key {
+            margin-left: auto;
+            font-family: var(--font-data);
+            font-size: 0.85rem;
+            color: var(--ink-light);
+            border: 1px solid var(--taupe-border);
+            padding: 0.25rem 0.5rem;
+        }
+
+        .option-label:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: var(--hard-shadow);
+        }
+
+        .option-label input[type="radio"]:checked~.custom-radio::after {
+            display: block;
+        }
+
+        .option-label:has(input[type="radio"]:checked) {
+            background: var(--ink-black);
+            color: var(--surface-white);
+            transform: translate(-2px, -2px);
+            box-shadow: var(--hard-shadow);
+        }
+
+        .option-label:has(input[type="radio"]:checked) .custom-radio {
+            border-color: var(--surface-white);
+        }
+
+        .option-label:has(input[type="radio"]:checked) .custom-radio::after {
+            background: var(--surface-white);
+        }
+
+        .option-label:has(input[type="radio"]:checked) .option-key {
+            color: var(--surface-white);
+            border-color: var(--ink-light);
+        }
+
+        .focus-footer {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 0 4rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-nav {
+            padding: 1rem 2rem;
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: var(--transition-snappy);
+            border: 2px solid var(--ink-black);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-prev {
+            background: var(--bg-oatmeal);
+            color: var(--ink-black);
+        }
+
+        .btn-prev:hover {
+            background: var(--surface-white);
+            transform: translate(-2px, -2px);
+            box-shadow: var(--hard-shadow-sm);
+        }
+
+        .btn-next {
+            background: var(--ink-black);
+            color: var(--surface-white);
+        }
+
+        .btn-next:hover {
+            background: var(--surface-white);
+            color: var(--ink-black);
+            transform: translate(-2px, -2px);
+            box-shadow: var(--hard-shadow);
+        }
+
+        /* Short Answer text area style */
+        .sa-input {
+            width: 100%;
+            height: 150px;
+            background: var(--surface-white);
+            border: 2px solid var(--ink-black);
+            border-radius: 2px;
+            padding: 1.5rem;
+            font-family: var(--font-data);
+            font-size: 1.1rem;
+            resize: vertical;
+            transition: var(--transition-snappy);
+        }
+
+        .sa-input:focus {
+            outline: none;
+            box-shadow: var(--hard-shadow);
+            transform: translate(-2px, -2px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="global-progress-bar">
+        <div class="global-progress-fill" id="progress-bar"></div>
+    </div>
+
+    <header class="focus-topbar">
+        <button class="btn-ghost" onclick="window.location.href='/student-hub.html'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Save & Exit
+        </button>
+
+        <div class="status-tracker">
+            <div class="status-label">Question</div>
+            <div class="status-numbers"><span id="curr-q-idx">00</span> <span
+                    style="color: var(--ink-light); font-weight: 400;">/ <span id="total-q-count">00</span></span></div>
+        </div>
+
+        <div class="timer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            --:--
+        </div>
+    </header>
+
+    <main class="focus-canvas">
+        <article class="question-container" id="question-container">
+            <!-- Dynamically populated by JS -->
+            <h2>Loading Question...</h2>
+        </article>
+
+        <footer class="focus-footer">
+            <button class="btn-nav btn-prev" id="btn-prev-question" style="visibility: hidden;">
+                Previous
+            </button>
+
+            <button class="btn-nav btn-next" id="btn-next-question">
+                Next Question
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+        </footer>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/components.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            // Default to Q001 if not provided for dummy testing
+            const quizId = urlParams.get('quizId') || 'Q001';
+
+            let quizData = null;
+            let currentIdx = 0;
+            // Map of questionId -> string answer
+            let userAnswers = {};
+
+            try {
+                quizData = await window.StructAPI.getQuizContent(quizId);
+                renderQuestion(0);
+            } catch (e) {
+                document.getElementById('question-container').innerHTML = `<h2>Error loading quiz ${quizId}</h2>`;
+            }
+
+            function recordCurrentAnswer() {
+                if (!quizData) return;
+                const q = quizData.questions[currentIdx];
+                if (q.type === 'MCQ') {
+                    const checked = document.querySelector(`input[name="q_${q.id}"]:checked`);
+                    if (checked) {
+                        userAnswers[q.id] = checked.value;
+                    }
+                } else if (q.type === 'ShortAnswer') {
+                    const val = document.getElementById(`sa_${q.id}`).value;
+                    if (val) userAnswers[q.id] = val;
+                }
+            }
+
+            function renderQuestion(index) {
+                if (index < 0 || index >= quizData.questions.length) return;
+                currentIdx = index;
+                const q = quizData.questions[currentIdx];
+
+                // Update header
+                document.getElementById('curr-q-idx').textContent = String(currentIdx + 1).padStart(2, '0');
+                document.getElementById('total-q-count').textContent = String(quizData.questions.length).padStart(2, '0');
+
+                // Update Progress bar
+                const prog = ((currentIdx) / quizData.questions.length) * 100;
+                document.getElementById('progress-bar').style.width = `${prog}%`;
+
+                // Update nav buttons
+                document.getElementById('btn-prev-question').style.visibility = currentIdx === 0 ? 'hidden' : 'visible';
+                if (currentIdx === quizData.questions.length - 1) {
+                    document.getElementById('btn-next-question').innerHTML = 'Submit Quiz <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                } else {
+                    document.getElementById('btn-next-question').innerHTML = 'Next Question <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
+                }
+
+                // Render Content
+                let html = `
+                    <div class="question-meta">
+                        <span class="tag">${q.type === 'MCQ' ? 'Multiple Choice' : 'Short Answer'}</span>
+                        <span class="tag tag-outline">${q.marks} Pts</span>
+                    </div>
+                    <h2 class="question-text">${q.text}</h2>
+                `;
+
+                if (q.type === 'MCQ') {
+                    html += `<div class="options-grid">`;
+                    const alpha = ['A', 'B', 'C', 'D', 'E', 'F'];
+                    q.options.forEach((opt, idx) => {
+                        // Check if previously selected
+                        const isChecked = userAnswers[q.id] === opt ? 'checked' : '';
+                        html += `
+                        <label class="option-label">
+                            <input type="radio" name="q_${q.id}" value="${opt}" ${isChecked}>
+                            <div class="custom-radio"></div>
+                            <span class="option-text">${opt}</span>
+                            <span class="option-key">${alpha[idx] || (idx + 1)}</span>
+                        </label>
+                        `;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'ShortAnswer') {
+                    const prevAns = userAnswers[q.id] || '';
+                    html += `
+                        <textarea class="sa-input" id="sa_${q.id}" placeholder="Type your answer here...">${prevAns}</textarea>
+                    `;
+                }
+
+                document.getElementById('question-container').innerHTML = html;
+            }
+
+            document.getElementById('btn-prev-question').addEventListener('click', () => {
+                recordCurrentAnswer();
+                renderQuestion(currentIdx - 1);
+            });
+
+            document.getElementById('btn-next-question').addEventListener('click', async () => {
+                recordCurrentAnswer();
+
+                if (currentIdx === quizData.questions.length - 1) {
+                    // Submit!
+                    const formattedAnswers = Object.keys(userAnswers).map(k => ({
+                        questionId: k,
+                        answer: userAnswers[k]
+                    }));
+
+                    try {
+                        const result = await window.StructAPI.submitAttempt(quizId, {
+                            studentName: "Luke Crain",
+                            answers: formattedAnswers
+                        });
+                        alert(`Quiz Submitted! You scored ${result.score} out of ${result.total}.`);
+                        window.location.href = '/student-hub.html';
+                    } catch (e) {
+                        alert("Error submitting attempt.");
+                        console.error(e);
+                    }
+
+                } else {
+                    renderQuestion(currentIdx + 1);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
