@@ -3,6 +3,7 @@
 #include <vector>
 #include <chrono>
 #include <algorithm>
+#include <filesystem>
 #include "../include/httplib.h"
 #include "../include/json.hpp"
 #include "../include/models/Quiz.h"
@@ -38,6 +39,9 @@ long long getCurrentTimeMs() {
 }
 
 void setupInitialData() {
+    // Ensure data directory exists
+    std::filesystem::create_directory("data");
+
     // Create a dummy teacher
     Teacher t("U001", "Professor Smith");
     

@@ -376,7 +376,7 @@
                         userAnswers[q.id] = checked.value;
                     }
                 } else if (q.type === 'ShortAnswer') {
-                    const val = document.getElementById(`sa_${q.id}`).value;
+                    const val = document.getElementById(`sa_${q.id}`).value.trim();
                     if (val) userAnswers[q.id] = val;
                 }
             }
