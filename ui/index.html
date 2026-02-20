@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizFlow - Modern Quiz Creator & Grader</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navigation -->
+        <nav class="glass-nav">
+            <div class="logo">
+                <span class="icon">✨</span>
+                <h1>QuizFlow</h1>
+            </div>
+            <div class="nav-tabs">
+                <button class="tab-btn active" data-target="dashboard">Dashboard</button>
+                <button class="tab-btn" data-target="teacher-view">Teacher Access</button>
+                <button class="tab-btn" data-target="student-view">Student Access</button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            
+            <!-- Dashboard View -->
+            <section id="dashboard" class="view-section active">
+                <div class="hero">
+                    <h2>Welcome to the Future of Assessment.</h2>
+                    <p>Create, manage, and auto-grade quizzes effortlessly with real-time feedback.</p>
+                </div>
+                <div class="action-cards">
+                    <div class="card interactive" onclick="switchTab('teacher-view')">
+                        <div class="card-icon">👨‍🏫</div>
+                        <h3>Teacher Portal</h3>
+                        <p>Create new quizzes with multiple question types.</p>
+                    </div>
+                    <div class="card interactive" onclick="switchTab('student-view')">
+                        <div class="card-icon">🎓</div>
+                        <h3>Student Portal</h3>
+                        <p>Browse available quizzes and test your knowledge.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Teacher View -->
+            <section id="teacher-view" class="view-section">
+                <div class="section-header">
+                    <h2>📝 Create a New Quiz</h2>
+                    <button id="save-quiz-btn" class="primary-btn">Save & Publish Quiz</button>
+                </div>
+                
+                <div class="card form-container">
+                    <div class="input-group">
+                        <label>Quiz Title</label>
+                        <input type="text" id="quiz-title" placeholder="e.g. Advanced C++ Concepts">
+                    </div>
+                    <div class="input-group">
+                        <label>Quiz ID</label>
+                        <input type="text" id="quiz-id" placeholder="e.g. CXX_101">
+                    </div>
+                </div>
+
+                <div class="questions-builder">
+                    <h3>Questions</h3>
+                    <div id="questions-list">
+                        <!-- Questions will be injected here -->
+                    </div>
+                    
+                    <div class="add-question-controls card drop-zone">
+                        <p>Add a new question:</p>
+                        <div class="btn-group">
+                            <button class="secondary-btn" onclick="addQuestionUI('MCQ')">Multiple Choice (MCQ)</button>
+                            <button class="secondary-btn" onclick="addQuestionUI('TrueFalse')">True / False</button>
+                            <button class="secondary-btn" onclick="addQuestionUI('ShortAnswer')">Short Answer</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Student View -->
+            <section id="student-view" class="view-section">
+                <div id="student-dashboard">
+                    <div class="section-header">
+                        <h2>📚 Available Quizzes</h2>
+                        <button class="icon-btn" onclick="loadQuizzes()">🔄 Refresh</button>
+                    </div>
+                    <div id="available-quizzes" class="quiz-grid">
+                        <!-- Quizzes injected here -->
+                    </div>
+                </div>
+
+                <div id="quiz-taking-view" class="hidden">
+                    <button class="back-btn" onclick="backToStudentDashboard()">← Back</button>
+                    <div class="quiz-taking-header">
+                        <h2 id="attempt-quiz-title">Loading Quiz...</h2>
+                        <div class="student-infocard">
+                            <input type="text" id="student-name" placeholder="Enter your name" required>
+                        </div>
+                    </div>
+                    
+                    <div id="attempt-questions" class="questions-list">
+                        <!-- Taking questions injected here -->
+                    </div>
+                    
+                    <div class="submit-footer">
+                        <button id="submit-quiz-btn" class="primary-btn pulse">Submit Answers</button>
+                    </div>
+                </div>
+
+                <div id="quiz-results-view" class="hidden text-center">
+                    <div class="results-card card glass-panel fade-in-up">
+                        <h2>🎉 Quiz Completed!</h2>
+                        <div class="score-display">
+                            <span id="final-score">0</span>
+                            <span class="divider">/</span>
+                            <span id="total-score">0</span>
+                        </div>
+                        <p id="feedback-message">Great job! Here is how you did.</p>
+                        <button class="secondary-btn mt-4" onclick="backToStudentDashboard()">Take Another Quiz</button>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification System -->
+    <div id="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
