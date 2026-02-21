@@ -1,0 +1,50 @@
+{
+    "authorId": "U001",
+    "questions": [
+        {
+            "correctOption": "3.1 m/s²",
+            "id": "q_1771686164106_0",
+            "marks": 10,
+            "options": [
+                "2.5 m/s²",
+                "3.1 m/s²",
+                "dfdddddddddddd"
+            ],
+            "text": "A car accelerates uniformly from rest to a speed of 25 m/s in 8.0 seconds. What is the acceleration?",
+            "type": "MCQ"
+        },
+        {
+            "correctAnswer": "dsfsd",
+            "id": "q_1771686164106_1",
+            "marks": 21,
+            "text": "Define Newton's First Law of Motion and provide a real-world example.",
+            "type": "ShortAnswer"
+        },
+        {
+            "correctOption": "",
+            "id": "q_1771686164106_2",
+            "marks": 10,
+            "options": [
+                "",
+                "",
+                "",
+                ""
+            ],
+            "text": "",
+            "type": "MCQ"
+        },
+        {
+            "correctOption": "",
+            "id": "q_1771686164106_3",
+            "marks": 10,
+            "options": [
+                "",
+                ""
+            ],
+            "text": "",
+            "type": "MCQ"
+        }
+    ],
+    "quizId": "Q_1771686164106",
+    "title": "Advanced Physics: Kinematics"
+}
