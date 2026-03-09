@@ -1,4 +1,4 @@
-# Quiz System - Full Documentation
+# Quiz System
 
 ## Table of Contents
 
